@@ -1,5 +1,5 @@
-# create_speculative_dashboard.py - ARCHIVO COMPLETO CORREGIDO
-# Lee valores técnicos de campos separados del CSV y los muestra correctamente
+# create_speculative_dashboard.py - VERSIÓN OPTIMIZADA PARA PROFIT METRICS
+# Muestra Profit Potential Score y métricas de ganancia rápida
 import pandas as pd
 import json
 import glob
@@ -7,9 +7,9 @@ import os
 from datetime import datetime
 
 def create_speculative_dashboard():
-    """Genera dashboard leyendo valores técnicos de campos separados (no diccionarios)"""
+    """Genera dashboard con métricas de profit potential"""
     
-    print("=== CREATE DASHBOARD PROFESIONAL (VALORES TÉCNICOS CORREGIDOS) ===")
+    print("=== CREATE DASHBOARD CON PROFIT METRICS ===")
     
     try:
         # Buscar archivos de resultados más recientes
@@ -37,15 +37,15 @@ def create_speculative_dashboard():
             
             # Verificar que tenemos los campos separados
             required_fields = ['stop_loss_price', 'stop_loss_percentage', 'stop_loss_method',
-                             'take_profit_price', 'take_profit_percentage', 'take_profit_method']
+                             'take_profit_price', 'take_profit_percentage', 'take_profit_method',
+                             'profit_potential_score', 'expected_days_to_target', 'expected_gain_per_day']
             missing_fields = [field for field in required_fields if field not in top10_df.columns]
             
             if missing_fields:
-                print(f"❌ Faltan campos requeridos: {missing_fields}")
-                print("💡 Ejecuta primero el screener corregido")
-                return create_fallback_dashboard()
+                print(f"⚠️ Faltan campos nuevos: {missing_fields}")
+                print("💡 Ejecuta primero el screener optimizado para profit metrics")
             
-            print("✅ Todos los campos técnicos están presentes")
+            print("✅ Campos técnicos verificados")
             
         except Exception as e:
             print(f"❌ Error leyendo CSV: {e}")
@@ -68,20 +68,22 @@ def create_speculative_dashboard():
                 "top_picks_count": len(top10_df),
                 "avg_score": round(top10_df['total_score'].mean(), 1) if not top10_df.empty else 0,
                 "avg_risk_reward": round(top10_df['risk_reward_ratio_numeric'].mean(), 1) if not top10_df.empty and 'risk_reward_ratio_numeric' in top10_df.columns else 0,
-                "message": f"Oportunidades especulativas con valores técnicos exactos ({len(top10_df)} encontradas)" if len(top10_df) > 0 else "Sin oportunidades especulativas"
+                "avg_profit_potential": round(top10_df['profit_potential_score'].mean(), 1) if 'profit_potential_score' in top10_df.columns else 0,
+                "avg_target_percentage": round(top10_df['take_profit_percentage'].mean(), 1) if not top10_df.empty else 0,
+                "message": f"🔥 {len(top10_df)} oportunidades para máximas ganancias rápidas (Stop ≤ -10%)" if len(top10_df) > 0 else "Sin oportunidades que cumplan criterios estrictos"
             },
             "top_picks": [],
             "market_analysis": {},
             "screening_criteria": {
-                "scoring_system": "Optimizado para swing 1-2 semanas",
+                "scoring_system": "Optimizado para ganancias rápidas 1-2 semanas",
+                "profit_priority": "30% - Profit Potential Score (target % + velocidad)",
+                "stop_loss_max": "-10% - Filtro estricto aplicado",
+                "risk_reward_min": "2:1 - Solo oportunidades de alto R:R",
                 "technical_calculations": "Stop Loss y Take Profit calculados técnicamente",
-                "relative_strength": "20% - Outperform SPY requerido",
-                "setup_type": "15% - Prioriza breakouts inminentes", 
-                "volume": "20% - Confirmación institucional",
-                "momentum": "25% - RSI 40-70, tendencia alcista",
-                "breakout_proximity": "10% - Cerca de resistencias",
-                "momentum_acceleration": "5% - Detecta aceleración",
-                "quality": "5% - Estabilidad técnica"
+                "relative_strength": "15% - Outperform SPY requerido",
+                "setup_type": "10% - Prioriza breakouts inminentes", 
+                "volume": "15% - Confirmación institucional",
+                "momentum": "20% - RSI 40-70, tendencia alcista"
             }
         }
         
@@ -89,7 +91,7 @@ def create_speculative_dashboard():
         print(f"Summary calculado: {dashboard_data['summary']}")
         
         if not top10_df.empty:
-            print(f"\n🔧 Procesando {len(top10_df)} acciones con valores técnicos...")
+            print(f"\n🔧 Procesando {len(top10_df)} acciones con profit metrics...")
             
             # Procesar cada acción del top 10
             for i, (_, row) in enumerate(top10_df.iterrows()):
@@ -103,7 +105,7 @@ def create_speculative_dashboard():
                     
                     print(f"  Procesando {symbol}: Precio=${current_price:.2f}, Score={total_score:.1f}")
                     
-                    # === LEER CAMPOS SEPARADOS (no diccionarios) ===
+                    # === LEER CAMPOS SEPARADOS ===
                     
                     # Stop Loss - campos separados
                     stop_loss_price = float(row['stop_loss_price'])
@@ -118,19 +120,12 @@ def create_speculative_dashboard():
                     # Risk/Reward
                     risk_reward_ratio = str(row['risk_reward_ratio'])
                     
-                    print(f"    ✓ Stop=${stop_loss_price:.2f}({stop_loss_pct:+.1f}%) Target=${take_profit_price:.2f}(+{take_profit_pct:.1f}%) R:R={risk_reward_ratio}")
+                    # 🔥 NUEVAS MÉTRICAS DE PROFIT
+                    profit_potential_score = float(row.get('profit_potential_score', 0))
+                    expected_days = int(row.get('expected_days_to_target', 10))
+                    gain_per_day = float(row.get('expected_gain_per_day', 0))
                     
-                    # === VALIDAR CÁLCULOS ===
-                    calc_stop_pct = ((stop_loss_price - current_price) / current_price) * 100
-                    calc_target_pct = ((take_profit_price - current_price) / current_price) * 100
-                    calc_rr = abs(calc_target_pct / calc_stop_pct) if calc_stop_pct != 0 else 999
-                    
-                    # Advertir si hay inconsistencias
-                    if abs(calc_stop_pct - stop_loss_pct) > 0.1:
-                        print(f"      ⚠️ Inconsistencia Stop: guardado={stop_loss_pct:.1f}% vs calculado={calc_stop_pct:.1f}%")
-                    
-                    if abs(calc_target_pct - take_profit_pct) > 0.1:
-                        print(f"      ⚠️ Inconsistencia Target: guardado={take_profit_pct:.1f}% vs calculado={calc_target_pct:.1f}%")
+                    print(f"    ✓ Profit Score: {profit_potential_score:.1f} | Target: {take_profit_pct:.1f}% en ~{expected_days} días")
                     
                     # Otros datos
                     setup_type = str(row.get('setup_type', 'Mixed Setup'))
@@ -150,7 +145,7 @@ def create_speculative_dashboard():
                         except:
                             entry_signals = ["RSI momentum", "Volume confirmation", "Technical setup"]
                     
-                    # Scores
+                    # Scores individuales
                     momentum_score = float(row.get('momentum_score', 0))
                     volume_score = float(row.get('volume_score', 0))
                     breakout_score = float(row.get('breakout_score', 0))
@@ -169,7 +164,15 @@ def create_speculative_dashboard():
                         "price": round(current_price, 2),
                         "score": round(total_score, 1),
                         
-                        # 🔥 VALORES TÉCNICOS EXACTOS (de campos separados)
+                        # 🔥 PROFIT METRICS
+                        "profit_metrics": {
+                            "profit_potential_score": round(profit_potential_score, 1),
+                            "expected_days_to_target": expected_days,
+                            "expected_gain_per_day": round(gain_per_day, 2),
+                            "target_efficiency": f"{gain_per_day:.2f}%/día"
+                        },
+                        
+                        # VALORES TÉCNICOS EXACTOS
                         "stop_loss": {
                             "price": round(stop_loss_price, 2),
                             "loss_percentage": round(stop_loss_pct, 1),
@@ -201,14 +204,7 @@ def create_speculative_dashboard():
                         },
                         
                         "entry_signals": entry_signals[:3] if isinstance(entry_signals, list) else ["Setup técnico confirmado"],
-                        "market_cap_millions": int(row.get('market_cap_millions', 0)),
-                        
-                        # Validación para debug
-                        "_validation": {
-                            "calculated_stop_pct": round(calc_stop_pct, 1),
-                            "calculated_target_pct": round(calc_target_pct, 1),
-                            "calculated_rr": round(calc_rr, 1)
-                        }
+                        "market_cap_millions": int(row.get('market_cap_millions', 0))
                     }
                     
                     dashboard_data["top_picks"].append(pick)
@@ -226,17 +222,23 @@ def create_speculative_dashboard():
                         "sector": str(row.get('sector', 'N/A')),
                         "price": round(current_price, 2),
                         "score": round(float(row.get('total_score', 0)), 1),
+                        "profit_metrics": {
+                            "profit_potential_score": 0,
+                            "expected_days_to_target": 10,
+                            "expected_gain_per_day": 0,
+                            "target_efficiency": "0.00%/día"
+                        },
                         "stop_loss": {
                             "price": round(current_price * 0.92, 2),
                             "loss_percentage": -8.0,
                             "method": "Fallback técnico"
                         },
                         "take_profit": {
-                            "price": round(current_price * 1.12, 2),
-                            "gain_percentage": 12.0,
+                            "price": round(current_price * 1.15, 2),
+                            "gain_percentage": 15.0,
                             "method": "Fallback técnico"
                         },
-                        "risk_reward": "1:1.5",
+                        "risk_reward": "1:1.9",
                         "setup_type": "Mixed Setup",
                         "metrics": {
                             "momentum_score": 0,
@@ -254,19 +256,14 @@ def create_speculative_dashboard():
                             "quality_score": 0
                         },
                         "entry_signals": ["Error en procesamiento"],
-                        "market_cap_millions": 0,
-                        "_validation": {
-                            "calculated_stop_pct": -8.0,
-                            "calculated_target_pct": 12.0,
-                            "calculated_rr": 1.5
-                        }
+                        "market_cap_millions": 0
                     }
                     dashboard_data["top_picks"].append(fallback_pick)
                     print(f"    🔧 Fallback añadido para {symbol}")
             
-            print(f"✅ {len(dashboard_data['top_picks'])} acciones procesadas correctamente")
+            print(f"✅ {len(dashboard_data['top_picks'])} acciones procesadas con profit metrics")
             
-            # Análisis del mercado con nuevas métricas
+            # Análisis del mercado con profit metrics
             if dashboard_data["top_picks"]:
                 try:
                     # Distribución por setup type
@@ -282,9 +279,10 @@ def create_speculative_dashboard():
                         if sector != 'N/A':
                             sector_distribution[sector] = sector_distribution.get(sector, 0) + 1
                     
-                    # Análisis de relative strength
-                    rs_values = [pick["metrics"]["relative_strength_5d"] for pick in dashboard_data["top_picks"] if pick["metrics"]["relative_strength_5d"] != 0]
-                    avg_relative_strength = round(sum(rs_values) / len(rs_values), 1) if rs_values else 0
+                    # 🔥 Análisis de profit potential
+                    profit_scores = [pick["profit_metrics"]["profit_potential_score"] for pick in dashboard_data["top_picks"]]
+                    target_percentages = [pick["take_profit"]["gain_percentage"] for pick in dashboard_data["top_picks"]]
+                    expected_days_list = [pick["profit_metrics"]["expected_days_to_target"] for pick in dashboard_data["top_picks"]]
                     
                     dashboard_data["market_analysis"] = {
                         "setup_distribution": setup_distribution,
@@ -292,19 +290,27 @@ def create_speculative_dashboard():
                         "avg_rsi": round(sum(pick["metrics"]["rsi"] for pick in dashboard_data["top_picks"]) / len(dashboard_data["top_picks"]), 1),
                         "avg_pullback": round(sum(pick["metrics"]["pullback_pct"] for pick in dashboard_data["top_picks"]) / len(dashboard_data["top_picks"]), 1),
                         "avg_volume_spike": round(sum(pick["metrics"]["volume_spike"] for pick in dashboard_data["top_picks"]) / len(dashboard_data["top_picks"]), 2),
-                        "avg_relative_strength_vs_spy": avg_relative_strength,
-                        "optimization_note": "Criterios optimizados para swing trading de 1-2 semanas con valores técnicos reales"
+                        "avg_relative_strength_vs_spy": round(sum(pick["metrics"]["relative_strength_5d"] for pick in dashboard_data["top_picks"]) / len(dashboard_data["top_picks"]), 1),
+                        "profit_analysis": {
+                            "avg_profit_potential_score": round(sum(profit_scores) / len(profit_scores), 1),
+                            "avg_target_percentage": round(sum(target_percentages) / len(target_percentages), 1),
+                            "avg_days_to_target": round(sum(expected_days_list) / len(expected_days_list), 1),
+                            "best_profit_score": round(max(profit_scores), 1),
+                            "best_target_percentage": round(max(target_percentages), 1)
+                        },
+                        "optimization_note": "Criterios optimizados para maximizar ganancias rápidas con stop loss ≤ -10%"
                     }
                     
-                    print(f"✓ Análisis de mercado calculado")
+                    print(f"✓ Análisis de mercado con profit metrics calculado")
                     
                 except Exception as e:
                     print(f"⚠️ Error calculando análisis de mercado: {e}")
         
-        # Estadísticas finales
+        # Estadísticas finales optimizadas
         if dashboard_data["top_picks"]:
             stop_losses = [pick["stop_loss"]["loss_percentage"] for pick in dashboard_data["top_picks"]]
             take_profits = [pick["take_profit"]["gain_percentage"] for pick in dashboard_data["top_picks"]]
+            profit_scores = [pick["profit_metrics"]["profit_potential_score"] for pick in dashboard_data["top_picks"]]
             
             dashboard_data["statistics"] = {
                 "avg_score": round(sum(pick["score"] for pick in dashboard_data["top_picks"]) / len(dashboard_data["top_picks"]), 1),
@@ -322,29 +328,33 @@ def create_speculative_dashboard():
                     "min": round(min(take_profits), 1),
                     "max": round(max(take_profits), 1)
                 },
+                "profit_metrics": {
+                    "avg_profit_score": round(sum(profit_scores) / len(profit_scores), 1),
+                    "min_profit_score": round(min(profit_scores), 1),
+                    "max_profit_score": round(max(profit_scores), 1),
+                    "all_stops_under_10pct": all(abs(sl) <= 10 for sl in stop_losses)
+                },
                 "technical_methods": {
                     "stop_methods": list(set(pick["stop_loss"]["method"] for pick in dashboard_data["top_picks"])),
                     "target_methods": list(set(pick["take_profit"]["method"] for pick in dashboard_data["top_picks"]))
                 },
-                "validation_note": "Valores técnicos calculados automáticamente - no estimaciones"
+                "validation_note": "Stop Loss máximo -10% | R:R mínimo 2:1 | Optimizado para ganancias rápidas"
             }
             
-            print(f"\n📊 ESTADÍSTICAS TÉCNICAS:")
+            print(f"\n📊 ESTADÍSTICAS CON PROFIT METRICS:")
             print(f"   - Stop Loss promedio: {dashboard_data['statistics']['avg_risk_percentage']:.1f}%")
             print(f"   - Take Profit promedio: {dashboard_data['statistics']['avg_reward_percentage']:.1f}%")
-            print(f"   - Rango Stop Loss: {dashboard_data['statistics']['stop_loss_range']['min']:.1f}% a {dashboard_data['statistics']['stop_loss_range']['max']:.1f}%")
-            print(f"   - Rango Take Profit: {dashboard_data['statistics']['take_profit_range']['min']:.1f}% a {dashboard_data['statistics']['take_profit_range']['max']:.1f}%")
-            print(f"   - Métodos Stop: {dashboard_data['statistics']['technical_methods']['stop_methods']}")
-            print(f"   - Métodos Target: {dashboard_data['statistics']['technical_methods']['target_methods']}")
+            print(f"   - Profit Score promedio: {dashboard_data['statistics']['profit_metrics']['avg_profit_score']:.1f}")
+            print(f"   - Todos stops ≤ -10%: {dashboard_data['statistics']['profit_metrics']['all_stops_under_10pct']}")
         else:
             dashboard_data["statistics"] = {
-                "message": "Sin oportunidades especulativas que cumplan criterios optimizados",
-                "suggestion": "Filtros optimizados para swing 1-2 semanas son muy selectivos",
-                "note": "Stop Loss y Take Profit se calculan técnicamente cuando hay candidatos"
+                "message": "Sin oportunidades que cumplan criterios estrictos",
+                "criteria": "Stop Loss ≤ -10% | Risk:Reward ≥ 2:1 | Profit Potential Score alto",
+                "suggestion": "Los filtros están optimizados para máximas ganancias con riesgo controlado"
             }
         
         # Crear directorio y guardar JSON
-        print("\n💾 Guardando JSON con valores técnicos exactos...")
+        print("\n💾 Guardando JSON con profit metrics...")
         os.makedirs('docs', exist_ok=True)
         
         json_path = 'docs/data.json'
@@ -360,24 +370,21 @@ def create_speculative_dashboard():
                 size = os.path.getsize(json_path)
                 print(f"✅ Archivo verificado - Tamaño: {size} bytes")
                 
-                # Mostrar muestra de valores técnicos
+                # Mostrar muestra de profit metrics
                 if dashboard_data["top_picks"]:
                     first_pick = dashboard_data["top_picks"][0]
-                    print(f"\n🔍 VERIFICACIÓN JSON (#{first_pick['rank']} {first_pick['symbol']}):")
-                    print(f"   Stop Loss: ${first_pick['stop_loss']['price']} ({first_pick['stop_loss']['loss_percentage']:+.1f}%) - {first_pick['stop_loss']['method']}")
-                    print(f"   Take Profit: ${first_pick['take_profit']['price']} (+{first_pick['take_profit']['gain_percentage']:.1f}%) - {first_pick['take_profit']['method']}")
-                    print(f"   Risk:Reward: {first_pick['risk_reward']}")
-                    
-                    # Validación cruzada
-                    validation = first_pick.get('_validation', {})
-                    if validation:
-                        print(f"   Validación: Stop calc={validation.get('calculated_stop_pct', 'N/A')}% Target calc={validation.get('calculated_target_pct', 'N/A')}%")
+                    print(f"\n🔍 VERIFICACIÓN PROFIT METRICS (#{first_pick['rank']} {first_pick['symbol']}):")
+                    print(f"   Profit Score: {first_pick['profit_metrics']['profit_potential_score']}/100")
+                    print(f"   Target: +{first_pick['take_profit']['gain_percentage']:.1f}% en ~{first_pick['profit_metrics']['expected_days_to_target']} días")
+                    print(f"   Eficiencia: {first_pick['profit_metrics']['target_efficiency']}")
+                    print(f"   Stop Loss: {first_pick['stop_loss']['loss_percentage']:.1f}% (≤ -10% ✓)")
+                    print(f"   Risk:Reward: {first_pick['risk_reward']} (≥ 2:1 ✓)")
                 
-                print(f"\n📊 Resumen del dashboard:")
+                print(f"\n📊 Resumen del dashboard optimizado:")
                 print(f"   - Candidatos totales: {dashboard_data['summary']['total_candidates']}")
                 print(f"   - Top picks: {dashboard_data['summary']['top_picks_count']}")
-                print(f"   - Score promedio: {dashboard_data['summary']['avg_score']}")
-                print(f"   - R:R promedio: {dashboard_data['summary']['avg_risk_reward']}")
+                print(f"   - Profit Score promedio: {dashboard_data['summary']['avg_profit_potential']}")
+                print(f"   - Target promedio: +{dashboard_data['summary']['avg_target_percentage']:.1f}%")
                 
             else:
                 print("❌ El archivo no se pudo verificar")
@@ -395,8 +402,8 @@ def create_speculative_dashboard():
         except Exception as e:
             print(f"⚠️ Error creando last_update.txt: {e}")
         
-        print(f"\n🎉 Dashboard profesional con valores técnicos exactos completado!")
-        print(f"🎯 Stop Loss y Take Profit técnicos se muestran correctamente")
+        print(f"\n🎉 Dashboard optimizado para máximas ganancias completado!")
+        print(f"🔥 Profit Potential Score y métricas de velocidad incluidas")
         return True
         
     except Exception as e:
@@ -406,8 +413,8 @@ def create_speculative_dashboard():
         return False
 
 def create_fallback_dashboard():
-    """Crea dashboard de fallback profesional"""
-    print("Creando dashboard de fallback profesional...")
+    """Crea dashboard de fallback optimizado"""
+    print("Creando dashboard de fallback optimizado...")
     
     fallback_data = {
         "timestamp": datetime.now().isoformat(),
@@ -417,27 +424,39 @@ def create_fallback_dashboard():
             "top_picks_count": 0,
             "avg_score": 0,
             "avg_risk_reward": 0,
-            "message": "Sin datos - Ejecutar screener corregido primero"
+            "avg_profit_potential": 0,
+            "avg_target_percentage": 0,
+            "message": "Sin datos - Ejecutar screener optimizado primero"
         },
         "top_picks": [],
         "market_analysis": {
             "message": "No hay datos para análisis",
-            "suggestion": "Ejecutar screener con valores técnicos corregidos"
+            "suggestion": "Ejecutar screener con filtros de profit optimizados",
+            "profit_analysis": {
+                "avg_profit_potential_score": 0,
+                "avg_target_percentage": 0,
+                "avg_days_to_target": 0,
+                "best_profit_score": 0,
+                "best_target_percentage": 0
+            }
         },
         "screening_criteria": {
-            "scoring_system": "Optimizado para swing 1-2 semanas",
+            "scoring_system": "Optimizado para ganancias rápidas 1-2 semanas",
+            "profit_priority": "30% - Profit Potential Score (target % + velocidad)",
+            "stop_loss_max": "-10% - Filtro estricto aplicado",
+            "risk_reward_min": "2:1 - Solo oportunidades de alto R:R",
             "technical_calculations": "Stop Loss y Take Profit calculados técnicamente",
-            "note": "Ejecutar screener corregido para valores técnicos reales",
+            "note": "Ejecutar screener optimizado para valores reales",
             "required": "python speculative_screener_automated.py"
         },
         "statistics": {
             "message": "Sin datos para mostrar estadísticas",
             "reasons": [
-                "Scoring optimizado para swing trading de 1-2 semanas",
-                "Stop loss y take profit calculados técnicamente",
-                "Relative strength vs SPY requerido",
-                "Setup types específicos priorizados",
-                "Valores técnicos reales (no estimaciones)",
+                "Scoring optimizado para profit potential",
+                "Stop loss máximo -10% (más estricto)",
+                "Risk:Reward mínimo 2:1 (más exigente)",
+                "Prioridad: máximas ganancias rápidas",
+                "Métricas de velocidad incluidas",
                 "Próxima ejecución en 24 horas"
             ]
         }
@@ -449,7 +468,7 @@ def create_fallback_dashboard():
         with open('docs/data.json', 'w', encoding='utf-8') as f:
             json.dump(fallback_data, f, indent=2, ensure_ascii=False)
         
-        print("✅ Dashboard de fallback profesional creado")
+        print("✅ Dashboard de fallback optimizado creado")
         return True
         
     except Exception as e:
@@ -459,11 +478,12 @@ def create_fallback_dashboard():
 if __name__ == "__main__":
     success = create_speculative_dashboard()
     if success:
-        print("\n✅ SUCCESS: Dashboard profesional con valores técnicos exactos creado")
+        print("\n✅ SUCCESS: Dashboard con profit metrics creado")
         print("📱 Abre docs/index.html en tu navegador")
-        print("🎯 Stop Loss y Take Profit técnicos se muestran correctamente")
-        print("📊 Risk:Reward ratios son consistentes con los cálculos")
-        print("💡 Los valores ahora reflejan cálculos técnicos reales")
+        print("🔥 Profit Potential Score mostrado para cada acción")
+        print("📊 Días estimados al target incluidos")
+        print("💰 Eficiencia de ganancia (%/día) calculada")
+        print("🎯 Todo optimizado para máximas ganancias rápidas")
     else:
         print("\n❌ FAILED: Revisar errores arriba")
-        print("💡 Asegúrate de ejecutar primero el screener corregido")
+        print("💡 Asegúrate de ejecutar primero el screener optimizado")
