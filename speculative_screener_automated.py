@@ -1,4 +1,5 @@
-# speculative_screener_automated.py - SCREENER ESPECULATIVO OPTIMIZADO PARA SWING 1-2 SEMANAS
+# speculative_screener_automated.py - ARCHIVO COMPLETO CORREGIDO
+# Stop Loss y Take Profit técnicos guardados correctamente en CSV
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -14,7 +15,7 @@ logging.getLogger('yfinance').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 class DynamicUniverseBuilder:
-    """Construye universo de acciones completamente dinámico - Versión con logs resumidos"""
+    """Construye universo de acciones completamente dinámico"""
     
     def __init__(self):
         self.nasdaq_api_url = "https://api.nasdaq.com/api/screener/stocks"
@@ -23,14 +24,12 @@ class DynamicUniverseBuilder:
         }
     
     def get_all_tradeable_stocks(self):
-        """Obtiene TODOS los tickers sin hardcode - logs resumidos"""
+        """Obtiene TODOS los tickers sin hardcode"""
         
-        # FUENTE 1-3: NASDAQ, NYSE, AMEX
         nasdaq_stocks = self._fetch_exchange_universe('NASDAQ')
         nyse_stocks = self._fetch_exchange_universe('NYSE')
         amex_stocks = self._fetch_exchange_universe('AMEX')
         
-        # Combinar y limpiar
         all_stocks = self._combine_and_deduplicate(nasdaq_stocks, nyse_stocks, amex_stocks)
         clean_universe = self._apply_sanity_filters(all_stocks)
         
@@ -38,7 +37,7 @@ class DynamicUniverseBuilder:
         return clean_universe
     
     def _fetch_exchange_universe(self, exchange):
-        """Descarga acciones - versión con logs resumidos"""
+        """Descarga acciones de un exchange"""
         try:
             params = {
                 'tableonly': 'true',
@@ -74,7 +73,7 @@ class DynamicUniverseBuilder:
         return []
     
     def _combine_and_deduplicate(self, *stock_lists):
-        """Combina listas y elimina duplicados por símbolo"""
+        """Combina listas y elimina duplicados"""
         all_stocks = []
         seen_symbols = set()
         
@@ -94,11 +93,11 @@ class DynamicUniverseBuilder:
         for stock in stocks:
             symbol = stock['symbol']
             if (len(symbol) <= 6 and
-                not symbol.endswith('.W') and  # Evitar warrants
-                not symbol.endswith('.U') and  # Evitar units
+                not symbol.endswith('.W') and
+                not symbol.endswith('.U') and
                 '$' not in symbol and
                 '/' not in symbol and
-                symbol.isalpha()):  # Solo letras
+                symbol.isalpha()):
                 
                 filtered.append(stock)
         
@@ -137,13 +136,13 @@ class DynamicUniverseBuilder:
             return 0
 
 class OptimizedSpeculativeSwingScreener:
-    """Screener optimizado para swing trading de 1-2 semanas con scoring avanzado"""
+    """Screener optimizado para swing trading 1-2 semanas con valores técnicos corregidos"""
     
     def __init__(self):
         self.spy_return_5d = None
         
     def calculate_spy_return_5d(self):
-        """Calcula rendimiento de SPY en 5 días - logs resumidos"""
+        """Calcula rendimiento de SPY en 5 días"""
         print("📊 Descargando SPY para comparación...")
         
         max_retries = 3
@@ -177,20 +176,17 @@ class OptimizedSpeculativeSwingScreener:
                     return None
     
     def quick_filters(self, stock_data):
-        """STAGE 1: Filtros ultra-rápidos sin descarga de datos históricos"""
+        """STAGE 1: Filtros ultra-rápidos"""
         try:
             market_cap = stock_data.get('market_cap', 0)
             price = stock_data.get('price', 0)
             
-            # Filtro 1: Market Cap entre $100M - $200B
             if market_cap < 100_000_000 or market_cap > 200_000_000_000:
                 return False
             
-            # Filtro 2: Precio entre $5 - $150
             if price < 5 or price > 150:
                 return False
             
-            # Filtro 3: Sectores conservadores (excluir)
             sector = stock_data.get('sector', '').lower()
             conservative_sectors = ['utilities', 'real estate', 'consumer staples']
             if any(cons_sector in sector for cons_sector in conservative_sectors):
@@ -202,20 +198,18 @@ class OptimizedSpeculativeSwingScreener:
             return False
     
     def analyze_stock_optimized(self, symbol):
-        """STAGE 2 & 3: Análisis optimizado para swing 1-2 semanas - SIN LOGS DETALLADOS"""
+        """STAGE 2 & 3: Análisis optimizado completo"""
         max_retries = 2
         retry_count = 0
         
         while retry_count < max_retries:
             try:
-                # PASO 1: Descargar datos históricos
                 ticker = yf.Ticker(symbol)
                 hist = ticker.history(period="6mo")
                 
                 if hist.empty or len(hist) < 50:
                     return {'passes_all_filters': False, 'filter_reasons': ['Datos insuficientes']}
                 
-                # PASO 2: Obtener info básica
                 ticker_info = {}
                 try:
                     ticker_info = ticker.info
@@ -228,11 +222,9 @@ class OptimizedSpeculativeSwingScreener:
                         'sector': 'Technology'
                     }
                 
-                # PASO 3: STAGE 2 - Filtros técnicos básicos
                 if not self._passes_technical_basics(hist, ticker_info):
                     return {'passes_all_filters': False, 'filter_reasons': ['Filtros técnicos básicos']}
                 
-                # PASO 4: STAGE 3 - Análisis optimizado para swing 1-2 semanas
                 result = self._complete_analysis_optimized_for_short_swing(hist, ticker_info, symbol)
                 
                 return result if result else {'passes_all_filters': False, 'filter_reasons': ['Error análisis']}
@@ -251,7 +243,7 @@ class OptimizedSpeculativeSwingScreener:
                     return {'passes_all_filters': False, 'filter_reasons': [f'Error: {type(e).__name__}']}
     
     def _passes_technical_basics(self, df, ticker_info):
-        """STAGE 2: Filtros técnicos básicos - sin logs"""
+        """STAGE 2: Filtros técnicos básicos"""
         try:
             if df.empty or len(df) < 50:
                 return False
@@ -264,7 +256,6 @@ class OptimizedSpeculativeSwingScreener:
             if pd.isna(current_price) or current_price <= 0:
                 return False
             
-            # ATR check
             atr_20 = self._calculate_atr(df, 20)
             if not atr_20 or pd.isna(atr_20) or atr_20 <= 0:
                 return False
@@ -273,12 +264,10 @@ class OptimizedSpeculativeSwingScreener:
             if atr_percentage > 8.0:
                 return False
             
-            # Beta check
             beta = ticker_info.get('beta', 1.5)
             if beta and beta > 3.0:
                 return False
             
-            # Tendencia alcista
             if len(df) < 50:
                 return False
                 
@@ -291,7 +280,6 @@ class OptimizedSpeculativeSwingScreener:
             if current_price < ma50 or ma21 < ma50:
                 return False
             
-            # Volumen mínimo
             avg_volume = df['Volume'].tail(50).mean()
             if pd.isna(avg_volume) or avg_volume < 500_000:
                 return False
@@ -302,49 +290,35 @@ class OptimizedSpeculativeSwingScreener:
             return False
     
     def _complete_analysis_optimized_for_short_swing(self, df, ticker_info, symbol):
-        """
-        ANÁLISIS OPTIMIZADO PARA SWING TRADING 1-2 SEMANAS
-        Sistema de scoring rebalanceado basado en research
-        """
+        """Análisis optimizado para swing 1-2 semanas - VERSIÓN CORREGIDA CSV"""
         try:
             current_price = df['Close'].iloc[-1]
             
-            # === ANÁLISIS BASE ===
+            # Análisis base
             momentum_data = self._analyze_momentum(df)
             breakout_data = self._analyze_breakout_potential(df)
             volume_data = self._analyze_volume(df)
             quality_score = self._calculate_quality_score(df)
             
-            # === NUEVOS FACTORES PARA SWING 1-2 SEMANAS ===
-            
-            # 1. RELATIVE STRENGTH vs SPY (CRÍTICO)
+            # Nuevos factores
             relative_strength = self._calculate_relative_strength(df)
             relative_strength_score = self._calculate_relative_strength_score(relative_strength)
-            
-            # 2. SETUP TYPE WEIGHTING (NUEVO)
             setup_type = self._determine_setup_type(momentum_data, breakout_data)
             setup_score = self._calculate_setup_type_score(setup_type, momentum_data, breakout_data)
-            
-            # 3. BREAKOUT PROXIMITY (NUEVO)
             proximity_score = self._calculate_breakout_proximity_score(df, current_price)
-            
-            # 4. MOMENTUM ACCELERATION (NUEVO)
             acceleration_score = self._calculate_momentum_acceleration_score(df)
             
-            # === SCORING OPTIMIZADO PARA 1-2 SEMANAS ===
-            
-            # PESOS REBALANCEADOS (basado en research):
+            # Scoring optimizado
             weights = {
-                'momentum': 0.25,           # 25% (reducido de 40%)
-                'relative_strength': 0.20,  # 20% (NUEVO - crítico)
-                'volume': 0.20,             # 20% (aumentado de 15%)
-                'setup_type': 0.15,         # 15% (NUEVO)
-                'breakout_proximity': 0.10, # 10% (NUEVO)
-                'acceleration': 0.05,       # 5% (NUEVO)
-                'quality': 0.05            # 5% (reducido de 20%)
+                'momentum': 0.25,
+                'relative_strength': 0.20,
+                'volume': 0.20,
+                'setup_type': 0.15,
+                'breakout_proximity': 0.10,
+                'acceleration': 0.05,
+                'quality': 0.05
             }
             
-            # SCORE TOTAL OPTIMIZADO
             base_score = (
                 momentum_data['score'] * weights['momentum'] +
                 relative_strength_score * weights['relative_strength'] +
@@ -353,23 +327,19 @@ class OptimizedSpeculativeSwingScreener:
                 proximity_score * weights['breakout_proximity'] +
                 acceleration_score * weights['acceleration'] +
                 quality_score * weights['quality']
-            ) * 2  # Escalar a 0-200
+            ) * 2
             
-            # === FILTROS ADICIONALES PARA SWING CORTO ===
-            
-            # Filtro 1: Must outperform SPY (o neutral)
+            # Filtros adicionales
             if relative_strength and relative_strength < -2:
                 return {'passes_all_filters': False, 'filter_reasons': ['Underperform SPY significativo']}
             
-            # Filtro 2: Setup type propicio para swing corto
             if setup_type == "Oversold Bounce" and momentum_data['score'] < 50:
                 return {'passes_all_filters': False, 'filter_reasons': ['Setup no óptimo swing corto']}
             
-            # Filtro 3: Volume confirmation mínimo
             if volume_data['score'] < 15:
                 return {'passes_all_filters': False, 'filter_reasons': ['Volume insuficiente']}
             
-            # === RISK/REWARD CALCULATION ===
+            # Risk/Reward calculation
             risk_reward_data = self._calculate_stop_loss_take_profit_silent(df, current_price)
             
             if risk_reward_data['stop_loss']['loss_percentage'] < -12:
@@ -378,25 +348,30 @@ class OptimizedSpeculativeSwingScreener:
             if risk_reward_data['risk_reward_ratio_numeric'] < 1.5:
                 return {'passes_all_filters': False, 'filter_reasons': ['R:R insuficiente']}
             
-            # === ENTRY SIGNALS OPTIMIZADOS ===
+            # Entry signals
             entry_signals = self._generate_optimized_entry_signals(
                 df, momentum_data, breakout_data, volume_data, 
                 relative_strength, setup_type, proximity_score
             )
             
-            # === DATOS PARA DASHBOARD ===
+            # Datos básicos
             company_name = ticker_info.get('longName', ticker_info.get('shortName', symbol))
             sector = ticker_info.get('sector', 'N/A')
             market_cap = ticker_info.get('marketCap', 0)
             
+            # ============================================
+            # 🔥 CORRECCIÓN: CAMPOS SEPARADOS PARA CSV
+            # ============================================
+            
             return {
+                # Datos básicos
                 'symbol': symbol,
                 'company_name': company_name[:40] if company_name else symbol,
                 'sector': sector,
                 'current_price': round(current_price, 2),
                 'market_cap_millions': round(market_cap / 1000000, 0) if market_cap else 0,
                 
-                # SCORES DETALLADOS
+                # Scores
                 'total_score': round(base_score, 1),
                 'momentum_score': momentum_data['score'],
                 'relative_strength_score': relative_strength_score,
@@ -405,27 +380,33 @@ class OptimizedSpeculativeSwingScreener:
                 'proximity_score': proximity_score,
                 'acceleration_score': acceleration_score,
                 'quality_score': quality_score,
+                'breakout_score': breakout_data['score'],
                 
-                # COMPATIBILIDAD CON DASHBOARD EXISTENTE
-                'breakout_score': breakout_data['score'],  # Para dashboard
+                # 🔥 STOP LOSS - CAMPOS SEPARADOS
+                'stop_loss_price': round(risk_reward_data['stop_loss']['price'], 2),
+                'stop_loss_percentage': round(risk_reward_data['stop_loss']['loss_percentage'], 1),
+                'stop_loss_method': risk_reward_data['stop_loss']['method'],
                 
-                # RISK/REWARD
-                'stop_loss': risk_reward_data['stop_loss'],
-                'take_profit': risk_reward_data['take_profit'],
+                # 🔥 TAKE PROFIT - CAMPOS SEPARADOS
+                'take_profit_price': round(risk_reward_data['take_profit']['price'], 2),
+                'take_profit_percentage': round(risk_reward_data['take_profit']['gain_percentage'], 1),
+                'take_profit_method': risk_reward_data['take_profit']['method'],
+                
+                # Risk/Reward
                 'risk_reward_ratio': risk_reward_data['risk_reward_ratio'],
                 'risk_reward_ratio_numeric': risk_reward_data['risk_reward_ratio_numeric'],
                 
-                # DATOS TÉCNICOS
+                # Datos técnicos
                 'relative_strength_5d': relative_strength,
                 'setup_type': setup_type,
-                'entry_signals': entry_signals,
-                'technical_data': {
-                    'rsi': momentum_data['rsi'],
-                    'pullback_pct': breakout_data['pullback_from_high'],
-                    'volume_spike': volume_data['recent_volume_ratio'],
-                    'atr_pct': round((self._calculate_atr(df, 20) / current_price) * 100, 1),
-                    'breakout_proximity_pct': round(proximity_score, 1)
-                },
+                'rsi': momentum_data['rsi'],
+                'pullback_pct': breakout_data['pullback_from_high'],
+                'volume_spike': volume_data['recent_volume_ratio'],
+                'atr_pct': round((self._calculate_atr(df, 20) / current_price) * 100, 1),
+                'breakout_proximity_pct': round(proximity_score, 1),
+                
+                # Entry signals como JSON string
+                'entry_signals': json.dumps(entry_signals[:3]) if entry_signals else json.dumps(["Setup técnico"]),
                 
                 'passes_all_filters': True
             }
@@ -436,35 +417,34 @@ class OptimizedSpeculativeSwingScreener:
     # === NUEVAS FUNCIONES PARA SCORING OPTIMIZADO ===
     
     def _calculate_relative_strength_score(self, relative_strength):
-        """Score basado en relative strength vs SPY (0-100 pts) - CRÍTICO para swing 1-2 semanas"""
+        """Score basado en relative strength vs SPY"""
         if not relative_strength:
-            return 50  # Neutral si no hay datos
+            return 50
         
         if relative_strength > 10:
-            return 100  # Muy fuerte outperformance
+            return 100
         elif relative_strength > 5:
-            return 85   # Fuerte outperformance
+            return 85
         elif relative_strength > 2:
-            return 70   # Buena outperformance
+            return 70
         elif relative_strength > 0:
-            return 55   # Leve outperformance
+            return 55
         elif relative_strength > -2:
-            return 40   # Leve underperformance
+            return 40
         else:
-            return 0    # Fuerte underperformance
+            return 0
     
     def _calculate_setup_type_score(self, setup_type, momentum_data, breakout_data):
-        """Score basado en tipo de setup (0-100 pts) - Prioriza setups para swing 1-2 semanas"""
+        """Score basado en tipo de setup"""
         base_scores = {
-            "Breakout Anticipation": 90,  # MEJOR para swing corto
-            "Momentum Pullback": 80,      # MUY BUENO
-            "Mixed Setup": 60,            # ACEPTABLE
-            "Oversold Bounce": 30         # MENOS IDEAL para swing corto
+            "Breakout Anticipation": 90,
+            "Momentum Pullback": 80,
+            "Mixed Setup": 60,
+            "Oversold Bounce": 30
         }
         
         base_score = base_scores.get(setup_type, 50)
         
-        # BONUS por calidad del setup
         if setup_type == "Breakout Anticipation":
             pullback = breakout_data.get('pullback_from_high', 0)
             if -3 <= pullback <= 1:
@@ -478,27 +458,27 @@ class OptimizedSpeculativeSwingScreener:
         return min(base_score, 100)
     
     def _calculate_breakout_proximity_score(self, df, current_price):
-        """Score basado en proximidad a breakout (0-100 pts) - Stocks cerca de resistencia"""
+        """Score basado en proximidad a breakout"""
         try:
             high_20d = df['High'].tail(20).max()
             distance_to_high = ((high_20d - current_price) / current_price) * 100
             
             if distance_to_high <= 2:
-                return 100  # Muy cerca del breakout
+                return 100
             elif distance_to_high <= 5:
-                return 80   # Cerca del breakout
+                return 80
             elif distance_to_high <= 8:
-                return 60   # Proximidad moderada
+                return 60
             elif distance_to_high <= 12:
-                return 40   # Algo lejos
+                return 40
             else:
-                return 20   # Lejos del breakout
+                return 20
                 
         except Exception:
             return 50
     
     def _calculate_momentum_acceleration_score(self, df):
-        """Score basado en aceleración del momentum (0-100 pts) - Detecta aceleración"""
+        """Score basado en aceleración del momentum"""
         try:
             returns_5d = df['Close'].pct_change().tail(5)
             returns_10d = df['Close'].pct_change().tail(10)
@@ -507,51 +487,46 @@ class OptimizedSpeculativeSwingScreener:
             longer_avg = returns_10d.mean()
             
             if recent_avg > longer_avg * 1.5:
-                return 100  # Momentum acelerando fuerte
+                return 100
             elif recent_avg > longer_avg * 1.2:
-                return 80   # Momentum acelerando
+                return 80
             elif recent_avg > longer_avg:
-                return 60   # Momentum positivo
+                return 60
             else:
-                return 30   # Momentum desacelerando
+                return 30
                 
         except Exception:
             return 50
     
     def _generate_optimized_entry_signals(self, df, momentum_data, breakout_data, 
                                         volume_data, relative_strength, setup_type, proximity_score):
-        """Genera señales optimizadas para swing trading 1-2 semanas"""
+        """Genera señales optimizadas para swing trading"""
         signals = []
         
-        # Signal 1: Relative Strength
         if relative_strength and relative_strength > 5:
             signals.append(f"Outperform SPY +{relative_strength:.1f}%")
         elif relative_strength and relative_strength > 0:
             signals.append(f"Beat SPY +{relative_strength:.1f}%")
         
-        # Signal 2: Setup específico
         if setup_type == "Breakout Anticipation":
             signals.append("Breakout inminente")
         elif setup_type == "Momentum Pullback":
             signals.append("Pullback saludable")
         
-        # Signal 3: Volume confirmation
         vol_ratio = volume_data.get('recent_volume_ratio', 1)
         if vol_ratio > 1.5:
             signals.append(f"Volume spike +{((vol_ratio-1)*100):.0f}%")
         
-        # Signal 4: Proximidad
         if proximity_score > 80:
             signals.append("Cerca de breakout")
         
-        # Signal 5: RSI momentum
         rsi = momentum_data.get('rsi', 50)
         if 55 <= rsi <= 68:
             signals.append(f"RSI momentum {rsi:.0f}")
         
         return signals[:3]
     
-    # === FUNCIONES EXISTENTES (sin logs detallados) ===
+    # === FUNCIONES EXISTENTES ===
     
     def _analyze_momentum(self, df):
         """Análisis de momentum con RSI y MAs"""
@@ -564,7 +539,6 @@ class OptimizedSpeculativeSwingScreener:
             ma21 = df['Close'].rolling(21).mean().iloc[-1]
             ma50 = df['Close'].rolling(50).mean().iloc[-1]
             
-            # Score RSI
             if 45 <= rsi_current <= 65:
                 rsi_score = 30
             elif 40 <= rsi_current <= 70:
@@ -572,7 +546,6 @@ class OptimizedSpeculativeSwingScreener:
             else:
                 rsi_score = 5
             
-            # Score posición vs MAs
             price_vs_ma21 = ((current_price - ma21) / ma21) * 100
             if -5 <= price_vs_ma21 <= 3:
                 ma_score = 25
@@ -581,7 +554,6 @@ class OptimizedSpeculativeSwingScreener:
             else:
                 ma_score = 5
             
-            # Score tendencia MA
             ma21_vs_ma50 = ((ma21 - ma50) / ma50) * 100
             if ma21_vs_ma50 > 2:
                 trend_score = 25
@@ -661,7 +633,7 @@ class OptimizedSpeculativeSwingScreener:
             return {'score': 0, 'recent_volume_ratio': 1.0, 'volume_50d_millions': 0}
     
     def _calculate_stop_loss_take_profit_silent(self, df, current_price):
-        """Versión sin logs del cálculo de stop loss y take profit"""
+        """Calcula stop loss y take profit técnicos"""
         try:
             # STOP LOSS TÉCNICO
             technical_support = self._detect_support_level(df, lookback=30)
@@ -836,7 +808,7 @@ class OptimizedSpeculativeSwingScreener:
         else:
             return "Mixed Setup"
     
-    # FUNCIONES AUXILIARES (sin cambios)
+    # FUNCIONES AUXILIARES
     def _calculate_rsi(self, prices, period=14):
         """Calcula RSI"""
         delta = prices.diff()
@@ -878,7 +850,6 @@ class OptimizedSpeculativeSwingScreener:
         try:
             current_price = df['Close'].iloc[-1]
             
-            # Swing lows recientes
             recent_swing_lows = []
             for i in range(max(0, len(df) - 40), len(df) - 2):
                 if (i >= 2 and i < len(df) - 2 and
@@ -886,7 +857,6 @@ class OptimizedSpeculativeSwingScreener:
                     df['Low'].iloc[i] < df['Low'].iloc[i+1]):
                     recent_swing_lows.append(df['Low'].iloc[i])
             
-            # MAs como soporte
             ma21 = df['Close'].rolling(21).mean().iloc[-1]
             ma50 = df['Close'].rolling(50).mean().iloc[-1]
             
@@ -918,7 +888,6 @@ class OptimizedSpeculativeSwingScreener:
         try:
             current_price = df['Close'].iloc[-1]
             
-            # Swing highs recientes
             recent_swing_highs = []
             for i in range(max(0, len(df) - 40), len(df) - 2):
                 if (i >= 2 and i < len(df) - 2 and
@@ -926,7 +895,6 @@ class OptimizedSpeculativeSwingScreener:
                     df['High'].iloc[i] > df['High'].iloc[i+1]):
                     recent_swing_highs.append(df['High'].iloc[i])
             
-            # Máximo reciente
             recent_high_20d = df['High'].tail(20).max()
             
             resistance_candidates = []
@@ -955,8 +923,8 @@ class OptimizedSpeculativeSwingScreener:
             return current_price * 1.15
 
 def main():
-    """Función principal optimizada - logs resumidos + scoring mejorado para swing 1-2 semanas"""
-    print("=== SCREENER ESPECULATIVO OPTIMIZADO PARA SWING 1-2 SEMANAS ===")
+    """Función principal optimizada con validación de valores técnicos"""
+    print("=== SCREENER ESPECULATIVO OPTIMIZADO (VALORES TÉCNICOS CORREGIDOS) ===")
     
     # 1. CONSTRUIR UNIVERSO DINÁMICO
     print("🔍 Construyendo universo dinámico...")
@@ -982,7 +950,7 @@ def main():
     batch_size = 100
     total_batches = (total_stocks + batch_size - 1) // batch_size
     
-    print(f"🎯 Scoring optimizado: RelativeStrength(20%) + SetupType(15%) + Volume(20%) + Momentum(25%) + Proximity(10%)")
+    print(f"🎯 Scoring optimizado: RelativeStrength(20%) + SetupType(15%) + Volume(20%) + Momentum(25%)")
     print(f"📦 Procesando en {total_batches} lotes de {batch_size} acciones c/u")
     print()
     
@@ -1008,12 +976,11 @@ def main():
                 if result and result.get('passes_all_filters'):
                     candidates.append(result)
                     
-                    # LOG RESUMIDO DE UNA LÍNEA
+                    # LOG RESUMIDO
                     symbol = stock['symbol']
                     score = result.get('total_score', 0)
                     price = result.get('current_price', 0)
                     setup = result.get('setup_type', '')
-                    # Truncar setup para mantener alineación
                     setup_short = setup.replace("Momentum ", "Mom.").replace("Breakout ", "Brk.").replace("Anticipation", "Ant")[:12]
                     rr = result.get('risk_reward_ratio', '')
                     rs = result.get('relative_strength_5d', 0)
@@ -1028,7 +995,7 @@ def main():
                 
             except Exception as e:
                 errors += 1
-                if errors <= 3:  # Solo primeros 3 errores
+                if errors <= 3:
                     print(f"❌ {stock['symbol']:6s}: {str(e)[:25]}...")
         
         # Pausa reducida
@@ -1036,7 +1003,7 @@ def main():
             print(f"   ⏸️  Pausa 3s...")
             time.sleep(3)
     
-    # RESUMEN FINAL COMPACTO
+    # RESUMEN FINAL
     print(f"\n{'='*70}")
     final_rate = (len(candidates) / total_stocks * 100) if total_stocks > 0 else 0
     print(f"📊 RESUMEN: {total_stocks} total | {stage1_passed} stage1 | {processed} analizadas | {len(candidates)} candidatos ({final_rate:.2f}%) | {errors} errores")
@@ -1044,38 +1011,48 @@ def main():
     if spy_return:
         print(f"📈 SPY 5d: {spy_return:+.2f}% (benchmark para relative strength)")
     
-    # TOP 10 RESUMIDO CON NUEVAS MÉTRICAS
+    # TOP 10 CON VALIDACIÓN DE VALORES TÉCNICOS
     if candidates:
         top_candidates = sorted(candidates, key=lambda x: x['total_score'], reverse=True)[:20]
         
-        print(f"\n🔝 TOP 10 ESPECULATIVOS (Scoring optimizado para swing 1-2 semanas):")
-        print(f"{'#':>2} {'SYMBOL':>6} {'PRICE':>8} {'SCORE':>6} {'R:R':>6} {'REL.STR':>7} {'SETUP':>15}")
-        print("-" * 65)
+        print(f"\n🔝 TOP 10 ESPECULATIVOS (Valores técnicos verificados):")
+        print(f"{'#':>2} {'SYMBOL':>6} {'PRICE':>8} {'STOP$':>7} {'STOP%':>6} {'TARG$':>7} {'TARG%':>6} {'R:R':>6}")
+        print("-" * 70)
         
         for i, candidate in enumerate(top_candidates[:10], 1):
             symbol = candidate['symbol']
             price = candidate['current_price']
-            score = candidate['total_score']
-            setup = candidate['setup_type']
-            if len(setup) > 13:
-                setup = setup.replace("Momentum ", "Mom.").replace("Breakout ", "Brk.").replace("Anticipation", "Ant")[:13]
+            stop_price = candidate['stop_loss_price']
+            stop_pct = candidate['stop_loss_percentage']
+            target_price = candidate['take_profit_price'] 
+            target_pct = candidate['take_profit_percentage']
             rr = candidate['risk_reward_ratio']
-            rs = candidate.get('relative_strength_5d', 0)
-            rs_str = f"{rs:+.1f}%" if rs else "N/A"
             
-            print(f"{i:2d} {symbol:>6s} ${price:7.2f} {score:6.1f} {rr:>6s} {rs_str:>7s} {setup:>15s}")
+            print(f"{i:2d} {symbol:>6s} ${price:7.2f} ${stop_price:6.2f} {stop_pct:5.1f}% ${target_price:6.2f} {target_pct:5.1f}% {rr:>6s}")
         
-        print(f"\n📊 DESGLOSE DE SCORES (Top 3):")
+        # VALIDACIÓN DE CÁLCULOS
+        print(f"\n🔍 VALIDACIÓN DE CÁLCULOS (Top 3):")
         for i, candidate in enumerate(top_candidates[:3], 1):
             symbol = candidate['symbol']
-            print(f"{i}. {symbol}: Total:{candidate['total_score']:.1f} = "
-                  f"Mom:{candidate['momentum_score']:.0f} + "
-                  f"RS:{candidate['relative_strength_score']:.0f} + "
-                  f"Vol:{candidate['volume_score']:.0f} + "
-                  f"Setup:{candidate['setup_score']:.0f} + "
-                  f"Prox:{candidate['proximity_score']:.0f} + "
-                  f"Accel:{candidate['acceleration_score']:.0f} + "
-                  f"Qual:{candidate['quality_score']:.0f}")
+            price = candidate['current_price']
+            stop_price = candidate['stop_loss_price']
+            stop_pct = candidate['stop_loss_percentage']
+            target_price = candidate['take_profit_price']
+            target_pct = candidate['take_profit_percentage']
+            
+            # Verificar cálculos
+            calc_stop_pct = ((stop_price - price) / price) * 100
+            calc_target_pct = ((target_price - price) / price) * 100
+            calc_rr = abs(calc_target_pct / calc_stop_pct) if calc_stop_pct != 0 else 999
+            
+            print(f"{i}. {symbol}:")
+            print(f"   Precio: ${price:.2f}")
+            print(f"   Stop: ${stop_price:.2f} ({stop_pct:+.1f}% guardado vs {calc_stop_pct:+.1f}% calculado)")
+            print(f"   Target: ${target_price:.2f} (+{target_pct:.1f}% guardado vs +{calc_target_pct:.1f}% calculado)")
+            print(f"   R:R: {candidate['risk_reward_ratio']} (calculado: 1:{calc_rr:.1f})")
+            print(f"   Método Stop: {candidate['stop_loss_method']}")
+            print(f"   Método Target: {candidate['take_profit_method']}")
+            print()
         
         # Guardar resultados
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1090,14 +1067,17 @@ def main():
         top_10_df = pd.DataFrame(top_candidates[:10])
         top_filename = f"speculative_top10_{timestamp}.csv"
         top_10_df.to_csv(top_filename, index=False)
-        print(f"💾 Top 10 guardado: {top_filename}")
+        print(f"💾 Top 10 guardado con campos separados: {top_filename}")
         
-        print(f"\n🎯 Criterios optimizados para ganancias máximas en 1-2 semanas aplicados")
-        print(f"📱 Dashboard se actualizará automáticamente con estos resultados")
+        # Mostrar columnas del CSV para verificación
+        print(f"📋 Columnas en CSV: {list(top_10_df.columns)}")
+        
+        print(f"\n🎯 Valores técnicos ahora se guardan correctamente en CSV")
+        print(f"📱 Dashboard se actualizará automáticamente con valores reales")
         
     else:
         print("❌ Sin candidatos - Filtros optimizados muy selectivos (normal)")
-        print("💡 Los nuevos criterios priorizan calidad sobre cantidad para swing trading corto")
+        print("💡 Los nuevos criterios priorizan calidad sobre cantidad")
 
 if __name__ == "__main__":
     main()
