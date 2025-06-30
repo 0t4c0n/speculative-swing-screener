@@ -1,0 +1,85 @@
+# .github/workflows/speculative-swing-analysis.yml
+name: Speculative Swing Trading Analysis
+
+on:
+  schedule:
+    # Ejecutar 4 horas después del cierre del mercado US
+    # Mercado US: 9:30 AM - 4:00 PM EST = 14:30 - 21:00 UTC (horario estándar)
+    # Mercado US: 9:30 AM - 4:00 PM EDT = 13:30 - 20:00 UTC (horario de verano)
+    - cron: '0 1 * * 2-6'   # 01:00 UTC = 4h después del cierre en horario estándar (Martes-Sábado UTC)
+    - cron: '0 0 * * 2-6'   # 00:00 UTC = 4h después del cierre en horario de verano (Martes-Sábado UTC)
+  workflow_dispatch:  # Permitir ejecución manual
+
+# PERMISOS NECESARIOS PARA GITHUB PAGES
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Asegurar que solo un workflow corra a la vez
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  speculative-swing-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180  # 3 horas máximo para procesar todas las acciones
+    
+    # Configurar entorno para GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+      
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Instalar dependencias
+      run: |
+        pip install --upgrade pip
+        pip install yfinance pandas requests numpy
+        
+    - name: Ejecutar screener especulativo completo
+      run: |
+        echo "Iniciando screener especulativo de swing trading..."
+        python speculative_screener_automated.py
+      env:
+        PYTHONUNBUFFERED: 1  # Para ver output en tiempo real
+        
+    - name: Crear JSON para dashboard especulativo
+      run: |
+        echo "Generando dashboard especulativo con datos completos..."
+        python create_speculative_dashboard.py
+        
+    - name: Verificar archivos generados
+      run: |
+        echo "=== ARCHIVOS GENERADOS ==="
+        ls -la docs/
+        echo "=== CONTENIDO DATA.JSON (primeras líneas) ==="
+        head -20 docs/data.json
+        echo "=== ESTADÍSTICAS ==="
+        echo "Tamaño data.json: $(stat -c%s docs/data.json) bytes"
+        if [ -f speculative_top10_*.csv ]; then
+          echo "Top 10 candidatos encontrados"
+          wc -l speculative_top10_*.csv
+        else
+          echo "Sin candidatos encontrados hoy"
+        fi
+    
+    - name: Configurar Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Subir artefacto de Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './docs'
+        
+    - name: Desplegar a GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
