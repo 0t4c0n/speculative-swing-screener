@@ -509,6 +509,20 @@
             box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
         }
         
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px;
+            color: #856404;
+            font-size: 0.85rem;
+        }
+        
+        .debug-info strong {
+            color: #533f03;
+        }
+        
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -608,7 +622,7 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 
-                // Fallback data con valores técnicos reales
+                // Fallback data con mensaje mejorado
                 const fallbackData = {
                     "timestamp": new Date().toISOString(),
                     "market_date": new Date().toISOString().split('T')[0],
@@ -622,13 +636,11 @@
                     "top_picks": [],
                     "screening_criteria": {
                         "scoring_system": "Optimizado para swing 1-2 semanas",
+                        "technical_calculations": "Stop Loss y Take Profit calculados técnicamente",
                         "relative_strength": "20% - Outperform SPY requerido",
                         "setup_type": "15% - Prioriza breakouts inminentes", 
                         "volume": "20% - Confirmación institucional",
-                        "momentum": "25% - RSI 40-70, tendencia alcista",
-                        "breakout_proximity": "10% - Cerca de resistencias",
-                        "momentum_acceleration": "5% - Detecta aceleración",
-                        "quality": "5% - Estabilidad técnica"
+                        "momentum": "25% - RSI 40-70, tendencia alcista"
                     }
                 };
                 
@@ -672,6 +684,10 @@
             
             if (data.top_picks && data.top_picks.length > 0) {
                 data.top_picks.forEach(stock => {
+                    // Validar que tenemos los datos de stop/target
+                    const hasValidStopLoss = stock.stop_loss && stock.stop_loss.price && stock.stop_loss.loss_percentage;
+                    const hasValidTakeProfit = stock.take_profit && stock.take_profit.price && stock.take_profit.gain_percentage;
+                    
                     mainContentHtml += `
                         <div class="stock-card">
                             <div class="rank-badge">${stock.rank}</div>
@@ -691,6 +707,7 @@
                                 </div>
                             </div>
                             
+                            ${hasValidStopLoss && hasValidTakeProfit ? `
                             <div class="risk-reward-section">
                                 <div class="risk-reward-title">💼 Gestión de Riesgo Técnica</div>
                                 <div class="risk-reward-grid">
@@ -712,6 +729,13 @@
                                     <div class="value">${stock.risk_reward}</div>
                                 </div>
                             </div>
+                            ` : `
+                            <div class="debug-info">
+                                <strong>⚠️ Datos técnicos incompletos:</strong><br>
+                                Stop Loss: ${hasValidStopLoss ? '✓' : '❌'} | Take Profit: ${hasValidTakeProfit ? '✓' : '❌'}<br>
+                                <small>Ejecutar screener corregido para valores técnicos completos</small>
+                            </div>
+                            `}
                             
                             <div class="technical-metrics">
                                 <div class="metric">
@@ -756,12 +780,11 @@
                         
                         <div class="criteria-grid">
                             <div class="criteria-item"><strong>Scoring:</strong> ${data.screening_criteria.scoring_system}</div>
+                            <div class="criteria-item"><strong>Cálculos Técnicos:</strong> ${data.screening_criteria.technical_calculations || 'Stop Loss y Take Profit técnicos'}</div>
                             <div class="criteria-item"><strong>Relative Strength:</strong> ${data.screening_criteria.relative_strength}</div>
                             <div class="criteria-item"><strong>Setup Type:</strong> ${data.screening_criteria.setup_type}</div>
                             <div class="criteria-item"><strong>Volume:</strong> ${data.screening_criteria.volume}</div>
                             <div class="criteria-item"><strong>Momentum:</strong> ${data.screening_criteria.momentum}</div>
-                            <div class="criteria-item"><strong>Proximidad:</strong> ${data.screening_criteria.breakout_proximity}</div>
-                            <div class="criteria-item"><strong>Aceleración:</strong> ${data.screening_criteria.momentum_acceleration}</div>
                         </div>
                     </div>
                 `;
@@ -778,7 +801,8 @@
                         🗓️ Fecha de mercado: ${data.market_date}
                     </div>
                     <div class="signature">
-                        🎯 Swing Trading Especulativo | Stop Loss y Take Profit Técnicos Calculados
+                        🎯 Swing Trading Especulativo | Stop Loss y Take Profit Técnicos Calculados<br>
+                        💡 Valores técnicos reales - No estimaciones
                     </div>
                 </div>
             `;
@@ -789,9 +813,13 @@
         function showErrorNotice() {
             const notice = document.createElement('div');
             notice.innerHTML = `
-                <div style="background: #fed7d7; border: 1px solid #fc8181; border-radius: 8px; padding: 15px; margin: 20px; color: #742a2a; text-align: center;">
+                <div class="debug-info">
                     <strong>⚠️ Modo Testing Local</strong><br>
-                    <small>Para datos reales: <code>cd docs && python -m http.server 8000</code></small>
+                    Para datos reales con valores técnicos:<br>
+                    1. <code>python speculative_screener_automated.py</code><br>
+                    2. <code>python create_speculative_dashboard.py</code><br>
+                    3. <code>cd docs && python -m http.server 8000</code><br>
+                    4. Abrir <code>http://localhost:8000</code>
                 </div>
             `;
             document.getElementById('content').appendChild(notice);
