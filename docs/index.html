@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 Speculative Swing Screener</title>
+    <title>🚀 Maximum Profit Swing Screener</title>
     <style>
         * {
             margin: 0;
@@ -21,7 +21,7 @@
         }
         
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
             background: #ffffff;
             border-radius: 16px;
@@ -87,6 +87,12 @@
             color: #3182ce;
         }
         
+        .summary-number.profit {
+            background: linear-gradient(135deg, #f6d55c, #ed8936);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
         .summary-label {
             font-size: 0.9rem;
             color: #718096;
@@ -111,7 +117,7 @@
         }
         
         .section-title::before {
-            content: "🎯";
+            content: "🚀";
             margin-right: 12px;
             font-size: 1.3rem;
         }
@@ -214,6 +220,67 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
+        /* 🔥 NUEVA SECCIÓN: PROFIT POTENTIAL */
+        .profit-potential-section {
+            background: linear-gradient(135deg, #fffaf0, #fed7aa);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #f6ad55;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .profit-potential-section::before {
+            content: "🎯";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 60px;
+            opacity: 0.1;
+        }
+        
+        .profit-potential-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #c05621;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .profit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .profit-metric {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #fed7aa;
+        }
+        
+        .profit-metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #c05621;
+            margin-bottom: 4px;
+        }
+        
+        .profit-metric-label {
+            font-size: 0.75rem;
+            color: #7b341e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        /* RISK/REWARD SECTION ACTUALIZADA */
         .risk-reward-section {
             background: linear-gradient(135deg, #f7fafc, #edf2f7);
             border-radius: 12px;
@@ -561,6 +628,11 @@
                 text-align: left;
             }
             
+            .profit-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
             .risk-reward-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
@@ -594,14 +666,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Speculative Swing Screener</h1>
-            <div class="subtitle">High-Risk/High-Reward Trading Opportunities</div>
+            <h1>🚀 Maximum Profit Swing Screener</h1>
+            <div class="subtitle">Optimizado para Máximas Ganancias Rápidas | Stop ≤ -10% | R:R ≥ 2:1</div>
         </div>
         
         <div id="content">
             <div class="loading">
                 <div class="loading-spinner">🔄</div>
-                <div>Cargando oportunidades especulativas...</div>
+                <div>Cargando oportunidades de máximo profit...</div>
             </div>
         </div>
     </div>
@@ -631,16 +703,20 @@
                         "top_picks_count": 0,
                         "avg_score": 0,
                         "avg_risk_reward": 0,
+                        "avg_profit_potential": 0,
+                        "avg_target_percentage": 0,
                         "message": "Testing local - Sin datos reales"
                     },
                     "top_picks": [],
                     "screening_criteria": {
-                        "scoring_system": "Optimizado para swing 1-2 semanas",
-                        "technical_calculations": "Stop Loss y Take Profit calculados técnicamente",
-                        "relative_strength": "20% - Outperform SPY requerido",
-                        "setup_type": "15% - Prioriza breakouts inminentes", 
-                        "volume": "20% - Confirmación institucional",
-                        "momentum": "25% - RSI 40-70, tendencia alcista"
+                        "scoring_system": "Optimizado para ganancias rápidas 1-2 semanas",
+                        "profit_priority": "30% - Profit Potential Score",
+                        "stop_loss_max": "-10% - Filtro estricto aplicado",
+                        "risk_reward_min": "2:1 - Solo alto R:R",
+                        "technical_calculations": "Stop Loss y Take Profit técnicos",
+                        "relative_strength": "15% - Outperform SPY requerido",
+                        "volume": "15% - Confirmación institucional",
+                        "momentum": "20% - RSI 40-70, tendencia alcista"
                     }
                 };
                 
@@ -652,7 +728,7 @@
         function renderDashboard(data) {
             const contentEl = document.getElementById('content');
             
-            // Summary section
+            // Summary section actualizado con profit metrics
             const summaryHtml = `
                 <div class="summary">
                     <div class="summary-grid">
@@ -665,12 +741,16 @@
                             <div class="summary-label">Top Picks</div>
                         </div>
                         <div class="summary-item">
-                            <div class="summary-number ${data.summary.avg_score > 0 ? 'info' : 'warning'}">${data.summary.avg_score}</div>
-                            <div class="summary-label">Score Promedio</div>
+                            <div class="summary-number profit">${data.summary.avg_profit_potential || 0}</div>
+                            <div class="summary-label">Profit Score Promedio</div>
                         </div>
                         <div class="summary-item">
-                            <div class="summary-number ${data.summary.avg_risk_reward > 1.5 ? 'success' : 'warning'}">1:${data.summary.avg_risk_reward || 0}</div>
+                            <div class="summary-number ${data.summary.avg_risk_reward >= 2 ? 'success' : 'warning'}">1:${data.summary.avg_risk_reward || 0}</div>
                             <div class="summary-label">R:R Promedio</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number ${data.summary.avg_target_percentage > 15 ? 'success' : 'info'}">+${data.summary.avg_target_percentage || 0}%</div>
+                            <div class="summary-label">Target Promedio</div>
                         </div>
                     </div>
                 </div>
@@ -679,14 +759,15 @@
             // Main content section
             let mainContentHtml = `
                 <div class="main-content">
-                    <div class="section-title">Top 10 Oportunidades Especulativas</div>
+                    <div class="section-title">Top 10 Máximas Ganancias Rápidas</div>
             `;
             
             if (data.top_picks && data.top_picks.length > 0) {
                 data.top_picks.forEach(stock => {
-                    // Validar que tenemos los datos de stop/target
+                    // Validar que tenemos los datos
                     const hasValidStopLoss = stock.stop_loss && stock.stop_loss.price && stock.stop_loss.loss_percentage;
                     const hasValidTakeProfit = stock.take_profit && stock.take_profit.price && stock.take_profit.gain_percentage;
+                    const hasProfitMetrics = stock.profit_metrics && stock.profit_metrics.profit_potential_score !== undefined;
                     
                     mainContentHtml += `
                         <div class="stock-card">
@@ -707,9 +788,29 @@
                                 </div>
                             </div>
                             
+                            ${hasProfitMetrics ? `
+                            <div class="profit-potential-section">
+                                <div class="profit-potential-title">🔥 Potencial de Ganancia Rápida</div>
+                                <div class="profit-grid">
+                                    <div class="profit-metric">
+                                        <div class="profit-metric-value">${stock.profit_metrics.profit_potential_score}</div>
+                                        <div class="profit-metric-label">Profit Score</div>
+                                    </div>
+                                    <div class="profit-metric">
+                                        <div class="profit-metric-value">~${stock.profit_metrics.expected_days_to_target}d</div>
+                                        <div class="profit-metric-label">Días al Target</div>
+                                    </div>
+                                    <div class="profit-metric">
+                                        <div class="profit-metric-value">${stock.profit_metrics.target_efficiency}</div>
+                                        <div class="profit-metric-label">Eficiencia</div>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
                             ${hasValidStopLoss && hasValidTakeProfit ? `
                             <div class="risk-reward-section">
-                                <div class="risk-reward-title">💼 Gestión de Riesgo Técnica</div>
+                                <div class="risk-reward-title">💼 Gestión de Riesgo Optimizada</div>
                                 <div class="risk-reward-grid">
                                     <div class="stop-loss">
                                         <div class="risk-label">🛑 Stop Loss</div>
@@ -733,7 +834,7 @@
                             <div class="debug-info">
                                 <strong>⚠️ Datos técnicos incompletos:</strong><br>
                                 Stop Loss: ${hasValidStopLoss ? '✓' : '❌'} | Take Profit: ${hasValidTakeProfit ? '✓' : '❌'}<br>
-                                <small>Ejecutar screener corregido para valores técnicos completos</small>
+                                <small>Ejecutar screener optimizado para valores completos</small>
                             </div>
                             `}
                             
@@ -775,14 +876,16 @@
                 mainContentHtml += `
                     <div class="no-results">
                         <div class="no-results-icon">🎯</div>
-                        <div class="no-results-title">Sin Oportunidades Especulativas</div>
-                        <div class="no-results-subtitle">Los filtros técnicos optimizados son muy selectivos</div>
+                        <div class="no-results-title">Sin Oportunidades de Alta Ganancia</div>
+                        <div class="no-results-subtitle">Los filtros estrictos garantizan solo las mejores oportunidades</div>
                         
                         <div class="criteria-grid">
+                            <div class="criteria-item"><strong>Profit Priority:</strong> ${data.screening_criteria.profit_priority}</div>
+                            <div class="criteria-item"><strong>Stop Loss Max:</strong> ${data.screening_criteria.stop_loss_max}</div>
+                            <div class="criteria-item"><strong>Risk:Reward Min:</strong> ${data.screening_criteria.risk_reward_min}</div>
                             <div class="criteria-item"><strong>Scoring:</strong> ${data.screening_criteria.scoring_system}</div>
-                            <div class="criteria-item"><strong>Cálculos Técnicos:</strong> ${data.screening_criteria.technical_calculations || 'Stop Loss y Take Profit técnicos'}</div>
+                            <div class="criteria-item"><strong>Cálculos:</strong> ${data.screening_criteria.technical_calculations || 'Stop Loss y Take Profit técnicos'}</div>
                             <div class="criteria-item"><strong>Relative Strength:</strong> ${data.screening_criteria.relative_strength}</div>
-                            <div class="criteria-item"><strong>Setup Type:</strong> ${data.screening_criteria.setup_type}</div>
                             <div class="criteria-item"><strong>Volume:</strong> ${data.screening_criteria.volume}</div>
                             <div class="criteria-item"><strong>Momentum:</strong> ${data.screening_criteria.momentum}</div>
                         </div>
@@ -792,7 +895,7 @@
             
             mainContentHtml += '</div>';
             
-            // Footer
+            // Footer actualizado
             const updateTime = new Date(data.timestamp).toLocaleString('es-ES');
             const footerHtml = `
                 <div class="footer">
@@ -801,8 +904,9 @@
                         🗓️ Fecha de mercado: ${data.market_date}
                     </div>
                     <div class="signature">
-                        🎯 Swing Trading Especulativo | Stop Loss y Take Profit Técnicos Calculados<br>
-                        💡 Valores técnicos reales - No estimaciones
+                        🚀 Maximum Profit Swing Trading | Stop ≤ -10% | R:R ≥ 2:1<br>
+                        🔥 Optimizado para máximas ganancias en 1-2 semanas<br>
+                        💡 Profit Potential Score prioriza velocidad y magnitud de ganancia
                     </div>
                 </div>
             `;
@@ -815,7 +919,7 @@
             notice.innerHTML = `
                 <div class="debug-info">
                     <strong>⚠️ Modo Testing Local</strong><br>
-                    Para datos reales con valores técnicos:<br>
+                    Para datos reales con profit metrics:<br>
                     1. <code>python speculative_screener_automated.py</code><br>
                     2. <code>python create_speculative_dashboard.py</code><br>
                     3. <code>cd docs && python -m http.server 8000</code><br>
@@ -826,14 +930,14 @@
         }
         
         function getRSIClass(rsi) {
-            if (rsi >= 50 && rsi <= 65) return 'positive';
+            if (rsi >= 55 && rsi <= 65) return 'positive';
             if (rsi >= 40 && rsi <= 70) return 'neutral';
             return 'negative';
         }
         
         function getPullbackClass(pullback) {
             if (pullback >= -8 && pullback <= -2) return 'positive';
-            if (pullback >= -12 && pullback <= 0) return 'neutral';
+            if (pullback >= -10 && pullback <= 0) return 'neutral';
             return 'negative';
         }
         
